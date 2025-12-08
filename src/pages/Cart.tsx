@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -184,7 +185,7 @@ const Cart = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <MainLayout>
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <ShoppingBag className="mx-auto h-24 w-24 text-muted-foreground mb-4" />
@@ -195,14 +196,14 @@ const Cart = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   const groupedItems = groupByStore();
 
   return (
-    <div className="min-h-screen bg-background">
+    <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-foreground mb-8">سبد خرید</h1>
 
@@ -367,7 +368,7 @@ const Cart = () => {
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
