@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+import MainLayout from "@/components/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -125,7 +126,7 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">کاتالوگ محصولات</h1>
@@ -217,7 +218,7 @@ const Products = () => {
           </div>
         )}
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
