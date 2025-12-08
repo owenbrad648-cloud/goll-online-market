@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,23 @@ import { Flower2 } from "lucide-react";
 import { toast } from "sonner";
 import { signIn, signUp } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { z } from "zod";
+
+// Validation schemas
+const loginSchema = z.object({
+  email: z.string().trim().email("فرمت ایمیل نامعتبر است").max(255, "ایمیل حداکثر ۲۵۵ کاراکتر"),
+  password: z.string().min(6, "رمز عبور باید حداقل ۶ کاراکتر باشد").max(128, "رمز عبور حداکثر ۱۲۸ کاراکتر")
+});
+
+const signupSchema = z.object({
+  fullName: z.string().trim().min(2, "نام باید حداقل ۲ کاراکتر باشد").max(100, "نام حداکثر ۱۰۰ کاراکتر"),
+  email: z.string().trim().email("فرمت ایمیل نامعتبر است").max(255, "ایمیل حداکثر ۲۵۵ کاراکتر"),
+  password: z.string().min(6, "رمز عبور باید حداقل ۶ کاراکتر باشد").max(128, "رمز عبور حداکثر ۱۲۸ کاراکتر"),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "رمزهای عبور یکسان نیستند",
+  path: ["confirmPassword"]
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -37,10 +53,19 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate with Zod
+    const result = loginSchema.safeParse(loginForm);
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { error } = await signIn(loginForm.email, loginForm.password);
+      const { error } = await signIn(result.data.email, result.data.password);
       
       if (error) {
         toast.error('خطا در ورود', {
@@ -62,13 +87,11 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (signupForm.password !== signupForm.confirmPassword) {
-      toast.error('رمزهای عبور یکسان نیستند');
-      return;
-    }
-
-    if (signupForm.password.length < 6) {
-      toast.error('رمز عبور باید حداقل ۶ کاراکتر باشد');
+    // Validate with Zod
+    const result = signupSchema.safeParse(signupForm);
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
@@ -76,9 +99,9 @@ const Auth = () => {
 
     try {
       const { error } = await signUp(
-        signupForm.email, 
-        signupForm.password,
-        signupForm.fullName
+        result.data.email, 
+        result.data.password,
+        result.data.fullName
       );
       
       if (error) {
