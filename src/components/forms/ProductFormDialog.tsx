@@ -5,9 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { productSchema, type ProductFormData } from "@/lib/validations";
+
+const CATEGORIES = [
+  { value: "general", label: "عمومی" },
+  { value: "flowers", label: "گل‌ها" },
+  { value: "bouquets", label: "دسته گل" },
+  { value: "plants", label: "گیاهان" },
+  { value: "accessories", label: "لوازم جانبی" },
+  { value: "gifts", label: "هدایا" },
+];
 
 interface ProductFormDialogProps {
   open: boolean;
@@ -26,7 +36,8 @@ export const ProductFormDialog = ({ open, onOpenChange, product, storeId, onSucc
     price: product?.price?.toString() || '',
     stock: product?.stock?.toString() || '',
     image_url: product?.image_url || '',
-    is_available: product?.is_available ?? true
+    is_available: product?.is_available ?? true,
+    category: product?.category || 'general'
   });
 
   const validateForm = (): ProductFormData | null => {
@@ -70,7 +81,8 @@ export const ProductFormDialog = ({ open, onOpenChange, product, storeId, onSucc
         stock: validatedData.stock,
         image_url: validatedData.image_url || null,
         is_available: validatedData.is_available ?? true,
-        store_id: storeId
+        store_id: storeId,
+        category: formData.category
       };
 
       if (product) {
@@ -164,18 +176,35 @@ export const ProductFormDialog = ({ open, onOpenChange, product, storeId, onSucc
               {errors.stock && <p className="text-sm text-destructive mt-1">{errors.stock}</p>}
             </div>
           </div>
-          <div>
-            <Label htmlFor="image_url">لینک تصویر</Label>
-            <Input
-              id="image_url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              placeholder="https://example.com/image.jpg"
-              dir="ltr"
-              maxLength={500}
-              className={errors.image_url ? "border-destructive" : ""}
-            />
-            {errors.image_url && <p className="text-sm text-destructive mt-1">{errors.image_url}</p>}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="category">دسته‌بندی</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="انتخاب دسته‌بندی" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="image_url">لینک تصویر</Label>
+              <Input
+                id="image_url"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                placeholder="https://example.com/image.jpg"
+                dir="ltr"
+                maxLength={500}
+                className={errors.image_url ? "border-destructive" : ""}
+              />
+              {errors.image_url && <p className="text-sm text-destructive mt-1">{errors.image_url}</p>}
+            </div>
           </div>
           <div className="flex items-center justify-between">
             <Label htmlFor="is_available">موجود برای فروش</Label>

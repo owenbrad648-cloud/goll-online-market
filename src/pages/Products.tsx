@@ -17,6 +17,7 @@ interface Product {
   image_url: string | null;
   stock: number;
   store_id: string;
+  category: string | null;
   stores: {
     name: string;
   };
@@ -27,12 +28,23 @@ interface Store {
   name: string;
 }
 
+const CATEGORIES = [
+  { value: "all", label: "همه دسته‌ها" },
+  { value: "general", label: "عمومی" },
+  { value: "flowers", label: "گل‌ها" },
+  { value: "bouquets", label: "دسته گل" },
+  { value: "plants", label: "گیاهان" },
+  { value: "accessories", label: "لوازم جانبی" },
+  { value: "gifts", label: "هدایا" },
+];
+
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStore, setSelectedStore] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const { addItem } = useCart();
 
   useEffect(() => {
@@ -105,7 +117,8 @@ const Products = () => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStore = selectedStore === "all" || product.store_id === selectedStore;
-    return matchesSearch && matchesStore;
+    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
+    return matchesSearch && matchesStore && matchesCategory;
   });
 
   const addToCart = (product: Product) => {
@@ -143,8 +156,20 @@ const Products = () => {
               className="pr-10"
             />
           </div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="انتخاب دسته‌بندی" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={selectedStore} onValueChange={setSelectedStore}>
-            <SelectTrigger className="w-full md:w-[200px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="انتخاب غرفه" />
             </SelectTrigger>
             <SelectContent>
