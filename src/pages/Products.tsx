@@ -121,7 +121,38 @@ const Products = () => {
     return matchesSearch && matchesStore && matchesCategory;
   });
 
-  const addToCart = (product: Product) => {
+  const addToCart = async (product: Product) => {
+    if (product.stock <= 0) {
+      toast({
+        title: "خطا",
+        description: "موجودی این محصول به اتمام رسیده است",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Decrease stock in database
+    const { error } = await supabase
+      .from("products")
+      .update({ stock: product.stock - 1 })
+      .eq("id", product.id);
+
+    if (error) {
+      toast({
+        title: "خطا",
+        description: "مشکلی در بروزرسانی موجودی پیش آمد",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update local state
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === product.id ? { ...p, stock: p.stock - 1 } : p
+      )
+    );
+
     addItem({
       id: `${product.id}-${Date.now()}`,
       productId: product.id,
@@ -130,8 +161,9 @@ const Products = () => {
       image_url: product.image_url,
       store_id: product.store_id,
       store_name: product.stores.name,
-      max_stock: product.stock,
+      max_stock: product.stock - 1,
     });
+
     toast({
       title: "افزوده شد",
       description: `${product.name} به سبد خرید اضافه شد`,
