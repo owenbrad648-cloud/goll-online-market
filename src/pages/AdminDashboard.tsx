@@ -5,11 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Store, Package, ShoppingBag, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Store, Package, ShoppingBag, ArrowRight, CheckCircle2, XCircle, Shield } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database['public']['Enums']['app_role'];
+
+const ROLES: { value: AppRole; label: string }[] = [
+  { value: 'customer', label: 'مشتری' },
+  { value: 'seller', label: 'غرفه‌دار' },
+  { value: 'admin', label: 'مدیر' }
+];
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -88,6 +98,31 @@ const AdminDashboard = () => {
     }
   };
 
+  const updateUserRole = async (userId: string, newRole: AppRole) => {
+    // First, delete existing roles for this user
+    const { error: deleteError } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      toast.error('خطا در حذف نقش قبلی');
+      return;
+    }
+
+    // Then insert the new role
+    const { error: insertError } = await supabase
+      .from('user_roles')
+      .insert({ user_id: userId, role: newRole });
+
+    if (insertError) {
+      toast.error('خطا در تغییر نقش');
+    } else {
+      toast.success('نقش کاربر با موفقیت تغییر کرد');
+      loadData();
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'pending': 'text-accent',
@@ -108,14 +143,9 @@ const AdminDashboard = () => {
     return texts[status] || status;
   };
 
-  const getRoleText = (roles: any[]) => {
-    if (!roles || roles.length === 0) return 'مشتری';
-    const roleTexts = {
-      'admin': 'مدیر',
-      'seller': 'غرفه‌دار',
-      'customer': 'مشتری'
-    };
-    return roles.map(r => roleTexts[r.role as keyof typeof roleTexts] || r.role).join('، ');
+  const getCurrentRole = (roles: any[]): AppRole => {
+    if (!roles || roles.length === 0) return 'customer';
+    return roles[0].role as AppRole;
   };
 
   if (loading) {
@@ -316,18 +346,54 @@ const AdminDashboard = () => {
                     <TableRow>
                       <TableHead>نام</TableHead>
                       <TableHead>نقش</TableHead>
+                      <TableHead>تغییر نقش</TableHead>
                       <TableHead>شماره تماس</TableHead>
                       <TableHead>تاریخ عضویت</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.full_name}</TableCell>
-                        <TableCell>{getRoleText(user.user_roles)}</TableCell>
-                        <TableCell dir="ltr">{user.phone || '-'}</TableCell>
+                    {users.map((userItem) => (
+                      <TableRow key={userItem.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {userItem.full_name}
+                            {getCurrentRole(userItem.user_roles) === 'admin' && (
+                              <Shield className="h-4 w-4 text-primary" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            getCurrentRole(userItem.user_roles) === 'admin' 
+                              ? 'bg-primary/10 text-primary' 
+                              : getCurrentRole(userItem.user_roles) === 'seller'
+                              ? 'bg-secondary/10 text-secondary'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {ROLES.find(r => r.value === getCurrentRole(userItem.user_roles))?.label || 'مشتری'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={getCurrentRole(userItem.user_roles)}
+                            onValueChange={(value) => updateUserRole(userItem.id, value as AppRole)}
+                            disabled={userItem.id === user?.id}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ROLES.map((role) => (
+                                <SelectItem key={role.value} value={role.value}>
+                                  {role.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell dir="ltr">{userItem.phone || '-'}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(user.created_at).toLocaleDateString('fa-IR')}
+                          {new Date(userItem.created_at).toLocaleDateString('fa-IR')}
                         </TableCell>
                       </TableRow>
                     ))}
