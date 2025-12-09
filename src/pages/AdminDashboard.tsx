@@ -48,12 +48,29 @@ const AdminDashboard = () => {
   }, [user, isAdmin]);
 
   const loadData = async () => {
-    // Load stores
+    // Load stores with owner profile
     const { data: storesData, count: storesCount } = await supabase
       .from('stores')
-      .select('*, profiles!stores_owner_id_fkey(full_name)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
-    setStores(storesData || []);
+    
+    // Fetch owner names separately
+    if (storesData && storesData.length > 0) {
+      const ownerIds = [...new Set(storesData.map(s => s.owner_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', ownerIds);
+      
+      const profilesMap = new Map(profilesData?.map(p => [p.id, p.full_name]) || []);
+      const storesWithOwners = storesData.map(store => ({
+        ...store,
+        owner_name: profilesMap.get(store.owner_id) || 'نامشخص'
+      }));
+      setStores(storesWithOwners);
+    } else {
+      setStores([]);
+    }
 
     // Load orders
     const { data: ordersData, count: ordersCount } = await supabase
@@ -63,13 +80,34 @@ const AdminDashboard = () => {
       .limit(20);
     setOrders(ordersData || []);
 
-    // Load users
-    const { data: usersData } = await supabase
+    // Load users with roles
+    const { data: usersData, count: usersCount } = await supabase
       .from('profiles')
-      .select('*, user_roles(role)')
-      .order('created_at', { ascending: false })
-      .limit(20);
-    setUsers(usersData || []);
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false });
+    
+    // Fetch roles separately
+    if (usersData && usersData.length > 0) {
+      const userIds = usersData.map(u => u.id);
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+      
+      const rolesMap = new Map<string, AppRole[]>();
+      rolesData?.forEach(r => {
+        const existing = rolesMap.get(r.user_id) || [];
+        rolesMap.set(r.user_id, [...existing, r.role]);
+      });
+      
+      const usersWithRoles = usersData.map(user => ({
+        ...user,
+        user_roles: rolesMap.get(user.id)?.map(role => ({ role })) || []
+      }));
+      setUsers(usersWithRoles);
+    } else {
+      setUsers([]);
+    }
 
     // Load products count
     const { count: productsCount } = await supabase
@@ -77,7 +115,7 @@ const AdminDashboard = () => {
       .select('*', { count: 'exact', head: true });
 
     setStats({
-      totalUsers: usersData?.length || 0,
+      totalUsers: usersCount || 0,
       totalStores: storesCount || 0,
       totalProducts: productsCount || 0,
       totalOrders: ordersCount || 0
@@ -251,7 +289,7 @@ const AdminDashboard = () => {
                         <div>
                           <CardTitle className="text-lg">{store.name}</CardTitle>
                           <CardDescription>
-                            {store.profiles?.full_name}
+                            {store.owner_name}
                           </CardDescription>
                         </div>
                         {store.is_active ? (
