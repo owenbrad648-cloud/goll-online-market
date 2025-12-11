@@ -225,16 +225,20 @@ const ProductDetail = () => {
             <Separator />
 
             {/* Store Info */}
-            <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl">
+            <div 
+              className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted transition-colors"
+              onClick={() => navigate(`/stores/${product.stores.id}`)}
+            >
               <div className="p-3 rounded-full bg-primary/10">
                 <Store className="h-6 w-6 text-primary" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="font-medium">{product.stores.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {product.stores.description || "فروشگاه معتبر"}
                 </p>
               </div>
+              <ArrowRight className="h-5 w-5 text-muted-foreground rotate-180" />
             </div>
 
             {/* Quantity Selector */}
