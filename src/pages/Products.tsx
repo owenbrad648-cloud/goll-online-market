@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import MainLayout from "@/components/layouts/MainLayout";
@@ -6,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ShoppingCart } from "lucide-react";
+import { Search, ShoppingCart, Eye } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Product {
@@ -39,6 +40,7 @@ const CATEGORIES = [
 ];
 
 const Products = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
@@ -226,19 +228,26 @@ const Products = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card 
+                key={product.id} 
+                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+                onClick={() => navigate(`/products/${product.id}`)}
+              >
                 <div className="aspect-square relative bg-muted">
                   {product.image_url ? (
                     <img
                       src={product.image_url}
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       بدون تصویر
                     </div>
                   )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Eye className="h-8 w-8 text-white" />
+                  </div>
                 </div>
                 <CardHeader>
                   <CardTitle className="line-clamp-1">{product.name}</CardTitle>
@@ -264,7 +273,10 @@ const Products = () => {
                 <CardFooter>
                   <Button
                     className="w-full"
-                    onClick={() => addToCart(product)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(product);
+                    }}
                   >
                     <ShoppingCart className="ml-2 h-4 w-4" />
                     افزودن به سبد خرید
