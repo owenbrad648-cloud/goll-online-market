@@ -12,6 +12,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
+import StoreDetail from "./pages/StoreDetail";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/products" element={<Products />} />
               <Route path="/products/:id" element={<ProductDetail />} />
+              <Route path="/stores/:id" element={<StoreDetail />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/customer" element={<CustomerDashboard />} />
               <Route path="/seller" element={<SellerDashboard />} />
