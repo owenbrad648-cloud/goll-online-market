@@ -4,12 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Store, Package, ShoppingBag, TrendingUp, ArrowRight, Plus, Edit } from "lucide-react";
+import { Store, Package, ShoppingBag, TrendingUp, ArrowRight, Plus, Edit, Settings2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProductFormDialog } from "@/components/forms/ProductFormDialog";
+import { ProductFeaturesDialog } from "@/components/forms/ProductFeaturesDialog";
 import { StoreFormDialog } from "@/components/forms/StoreFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -23,6 +24,8 @@ const SellerDashboard = () => {
   const [storeDialogOpen, setStoreDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+  const [featuresDialogOpen, setFeaturesDialogOpen] = useState(false);
+  const [selectedProductForFeatures, setSelectedProductForFeatures] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isSeller)) {
@@ -425,23 +428,36 @@ const SellerDashboard = () => {
                           موجودی: {product.stock}
                         </span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleEditProduct(product)}
+                          >
+                            <Edit className="ml-1 h-3 w-3" />
+                            ویرایش
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="flex-1"
+                            onClick={() => setDeleteProductId(product.id)}
+                          >
+                            حذف
+                          </Button>
+                        </div>
                         <Button 
                           size="sm" 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={() => handleEditProduct(product)}
+                          variant="secondary"
+                          onClick={() => {
+                            setSelectedProductForFeatures(product);
+                            setFeaturesDialogOpen(true);
+                          }}
                         >
-                          <Edit className="ml-1 h-3 w-3" />
-                          ویرایش
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="flex-1"
-                          onClick={() => setDeleteProductId(product.id)}
-                        >
-                          حذف
+                          <Settings2 className="ml-1 h-3 w-3" />
+                          مدیریت ویژگی‌ها
                         </Button>
                       </div>
                     </CardContent>
@@ -514,6 +530,16 @@ const SellerDashboard = () => {
           ownerId={user?.id || ''}
           onSuccess={loadData}
         />
+
+        {selectedProductForFeatures && (
+          <ProductFeaturesDialog
+            open={featuresDialogOpen}
+            onOpenChange={setFeaturesDialogOpen}
+            productId={selectedProductForFeatures.id}
+            productName={selectedProductForFeatures.name}
+            onSuccess={loadData}
+          />
+        )}
         
         <AlertDialog open={!!deleteProductId} onOpenChange={() => setDeleteProductId(null)}>
           <AlertDialogContent>
