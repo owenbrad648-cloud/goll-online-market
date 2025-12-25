@@ -3,9 +3,11 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-flowers.jpg";
 import FloatingParticles from "./FloatingParticles";
+import { useParallax } from "@/hooks/useParallax";
 
 const Hero = () => {
   const navigate = useNavigate();
+  const parallaxOffset = useParallax(0.3);
   
   return (
     <section className="relative overflow-hidden">
@@ -62,12 +64,19 @@ const Hero = () => {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl" />
-            <div className="relative rounded-3xl overflow-hidden shadow-rose border-4 border-background">
+            <div 
+              className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl"
+              style={{ transform: `translateY(${parallaxOffset * 0.5}px)` }}
+            />
+            <div 
+              className="relative rounded-3xl overflow-hidden shadow-rose border-4 border-background"
+              style={{ transform: `translateY(${parallaxOffset}px)` }}
+            >
               <img 
                 src={heroImage} 
                 alt="بازار گل" 
-                className="w-full h-auto"
+                className="w-full h-auto transition-transform duration-100"
+                style={{ transform: `scale(1.1) translateY(${-parallaxOffset * 0.5}px)` }}
               />
             </div>
           </div>
