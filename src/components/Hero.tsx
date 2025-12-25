@@ -2,12 +2,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-flowers.jpg";
+import FloatingParticles from "./FloatingParticles";
 
 const Hero = () => {
   const navigate = useNavigate();
   
   return (
     <section className="relative overflow-hidden">
+      <FloatingParticles />
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
       
       <div className="container relative py-20 lg:py-32">
